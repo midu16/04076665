@@ -1,5 +1,5 @@
 # Use Fedora base image
-FROM fedora:latest
+FROM registry.fedoraproject.org/fedora:latest
 
 # Install iperf3 and clean up the cache
 RUN dnf install -y iperf3 \

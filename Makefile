@@ -5,7 +5,7 @@ PERF_DOCKERFILE=./perf
 IPERF3_IMAGE=quay.io/midu/iperf3:latest
 IPERF3_DOCKERFILE=./iperf3
 
-TCPDUMP_IMAGE=quay.io/midu/tcpdump:latest
+TCPDUMP_IMAGE=quay.io/midu/tcpdump:golang-sockets
 TCPDUMP_DOCKERFILE=./tcpdump
 
 CONTAINER_TOOL ?= podman  # Default to Podman, but can be overridden with `make CONTAINER_TOOL=docker`

@@ -16,23 +16,42 @@ metadata:
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: tcpdump-scc
-allowHostNetwork: true
-allowPrivilegedContainer: false
-allowHostPorts: true
+  name: unrestricted-scc
+allowHostNetwork: true  # Allow host network usage
+allowPrivilegedContainer: true  # Allow privileged containers
+allowPrivilegeEscalation: true  # Allow privilege escalation
+allowHostPorts: true  # Allow the use of host ports
 allowedCapabilities:
-  - NET_ADMIN
-  - NET_RAW
+  - NET_ADMIN  # Allow NET_ADMIN capability
+  - NET_RAW  # Allow NET_RAW capability
+  - SYS_ADMIN  # Allow SYS_ADMIN capability
+seccompProfiles:
+  - "*"  # Allow any seccomp profile
 runAsUser:
-  type: MustRunAsRange
-  uidRangeMin: 1000000000
-  uidRangeMax: 1000009999
+  type: RunAsAny  # Allow any UID
 seLinuxContext:
-  type: RunAsAny
+  type: RunAsAny  # Allow any SELinux context
 fsGroup:
-  type: RunAsAny
+  type: RunAsAny  # Allow any fsGroup
+volumes:
+  - hostPath  # Allow use of hostPath volumes
+  - projected
+  - secret
+  - configMap
+  - emptyDir
+  - nfs
+  - persistentVolumeClaim
+  - downwardAPI
+  - gcePersistentDisk
+  - awsElasticBlockStore
+  - cephFS
+  - iscsi
+  - rbd
+  - cinder
+  - glusterfs
+  - azureDisk
 users:
-  - system:serviceaccount:04076665:default
+  - system:serviceaccount:04076665:default  # Allow the default service account
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -94,6 +113,7 @@ spec:
       labels:
         app: tcpdump-stress
     spec:
+      serviceAccountName: default  # Explicitly specify SA using unrestricted-scc
       hostNetwork: true
       securityContext:
         runAsUser: 1000000000
@@ -111,23 +131,19 @@ spec:
                         - iperf-test
                 topologyKey: "kubernetes.io/hostname"
       containers:
-        - name: tcpdump
-          image: quay.io/midu/tcpdump:latest
-          command:
-            - /bin/sh
-            - -c
-            - |
-              for I in $(seq 1 200); do (tcpdump -qnni any &) ; done
-              sleep infinity
+        - name: tcpdump-golang-sockets
+          image: quay.io/midu/tcpdump:golang-sockets
           securityContext:
+            privileged: true
             capabilities:
               add:
                 - NET_ADMIN
                 - NET_RAW
-            runAsUser: 1000000000
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-      volumes:
-        - name: tmp
-          emptyDir: {}
+                - SYS_ADMIN                 # Add SYS_ADMIN to allow low-level networking
+            seccompProfile:
+              type: RuntimeDefault          # Use default security profile
+            allowPrivilegeEscalation: true  # Allow privilege escalation
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

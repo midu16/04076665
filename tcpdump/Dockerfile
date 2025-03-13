@@ -1,9 +1,18 @@
 # Use Fedora base image
-FROM fedora:latest
+FROM registry.fedoraproject.org/fedora:latest
 
-# Install tcpdump and clean up the cache
-RUN dnf install -y tcpdump \
+# Install necessary dependencies including Golang
+RUN dnf install -y tcpdump golang \
     && dnf clean all
 
-# Set the default command to run tcpdump with a basic capture option
-CMD ["tcpdump", "-i", "any", "-n"]
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Go source code into the container
+COPY ./go-sockets/main.go .
+
+# Build the Go binary
+RUN go build -o socket_app main.go
+
+# Set the default entrypoint to run the Go binary
+ENTRYPOINT ["/app/socket_app"]
