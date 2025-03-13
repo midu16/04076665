@@ -1,12 +1,24 @@
 # Replicator [#04076665](https://access.redhat.com/support/cases/#/case/04076665/)
 
+## Table of Content
+
+- [Replicator #04076665](#replicator-04076665)
+  - [Table of Content](#table-of-content)
+  - [Environment](#environment)
+  - [Building the perf OCI](#building-the-perf-oci)
+  - [Running the Replicator Deployment:](#running-the-replicator-deployment)
+  - [Conclusions and Results](#conclusions-and-results)
+
 ## Environment
 
 OCP 4.14.35
 
 MultiNodeOpenShift 
 
-## Building the perf OCI:
+Kernel version 5.14.0-284.79.1.el9_2.x86_64
+
+
+## Building the perf OCI
 
 ```bash
 midu$ make all
@@ -137,6 +149,42 @@ Writing manifest to image destination
 > [!NOTE]
 > Ensure to change the [Deployment CR](/replicator.yaml) to match your environment. The section that requires update its outlined by `Specify the exact node name here` note.
 
+- Creating the [replicator.yaml](./replicator.yaml) deployment:
+
+```bash
+[root@INBACRNRDL0102 ~]# oc create -f replicator.yaml
+```
+
+This will create the following:
+
+- Set of `pods`: 
+
+```bash
+[root@INBACRNRDL0102 ~]# oc get pods -n 04076665
+NAME                              READY   STATUS    RESTARTS        AGE
+iperf-test-584b594cb9-qf465       2/2     Running   6 (3m24s ago)   13m
+tcpdump-stress-7cf4ccf65f-jh8mh   1/1     Running   0               13m
+```
+
+- Set of `ReplicaSets`:
+
+```bash
+[root@INBACRNRDL0102 ~]# oc get rs -n 04076665
+NAME                        DESIRED   CURRENT   READY   AGE
+iperf-test-584b594cb9       1         1         1       14m
+tcpdump-stress-7cf4ccf65f   1         1         1       14m
+```
+
+- Set of `Deployments`:
+```bash
+[root@INBACRNRDL0102 ~]# oc get deployments -n 04076665
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+iperf-test       1/1     1            1           17m
+tcpdump-stress   1/1     1            1           17m
+```
+> [!NOTE]
+> When  
+
 - Connect to the node for collecting `perf data`:
 
 
@@ -162,3 +210,7 @@ make configuration changes via `machineconfig` objects:
 [root@hub-ctlplane-0 ~]# podman exec -it perf-container /bin/sh
 sh-5.2# perf record
 ```
+
+## Conclusions and Results
+
+TBD

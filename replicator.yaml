@@ -19,11 +19,14 @@ metadata:
   name: tcpdump-scc
 allowHostNetwork: true
 allowPrivilegedContainer: false
+allowHostPorts: true
 allowedCapabilities:
   - NET_ADMIN
   - NET_RAW
 runAsUser:
-  type: RunAsAny
+  type: MustRunAsRange
+  uidRangeMin: 1000000000
+  uidRangeMax: 1000009999
 seLinuxContext:
   type: RunAsAny
 fsGroup:
@@ -47,7 +50,9 @@ spec:
         app: iperf-test
     spec:
       hostNetwork: true
-      nodeName: hub-ctlplane-0.5g-deployment.lab  # Specify the exact node name here
+      securityContext:
+        runAsUser: 1000000000
+      nodeName: hub-ctlplane-0.5g-deployment.lab
       containers:
         - name: iperf-server
           image: quay.io/midu/iperf3:latest
@@ -59,6 +64,7 @@ spec:
               add:
                 - NET_ADMIN
                 - NET_RAW
+            runAsUser: 1000000000
 
         - name: iperf-client
           image: quay.io/midu/iperf3:latest
@@ -71,6 +77,7 @@ spec:
               add:
                 - NET_ADMIN
                 - NET_RAW
+            runAsUser: 1000000000
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -88,7 +95,9 @@ spec:
         app: tcpdump-stress
     spec:
       hostNetwork: true
-      nodeName: hub-ctlplane-0.5g-deployment.lab  # Specify the exact node name here
+      securityContext:
+        runAsUser: 1000000000
+      nodeName: hub-ctlplane-0.5g-deployment.lab
       affinity:
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -115,6 +124,7 @@ spec:
               add:
                 - NET_ADMIN
                 - NET_RAW
+            runAsUser: 1000000000
           volumeMounts:
             - name: tmp
               mountPath: /tmp
